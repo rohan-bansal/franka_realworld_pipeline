@@ -1,0 +1,6 @@
+[submodule "gello_software-cleanup/third_party/robomimic"]
+	path = gello_software-cleanup/third_party/robomimic
+	url = https://github.com/ARISE-Initiative/robomimic/tree/5dee58f9cc1235010d0877142b54d0e82dd23986
+[submodule "gello_software-cleanup/third_party/robosuite"]
+	path = gello_software-cleanup/third_party/robosuite
+	url = https://github.com/ARISE-Initiative/robosuite/tree/eafb81f54ffc104f905ee48a16bb15f059176ad3

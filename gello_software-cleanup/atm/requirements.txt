@@ -1,0 +1,7 @@
+
+bddl
+gym
+gymnasium
+hydra-core
+lightning
+timm

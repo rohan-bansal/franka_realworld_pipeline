@@ -1,0 +1,26 @@
+#!/bin/bash
+#SBATCH --job-name=stack_three_make_smaller
+#SBATCH --output=/coc/flash7/nkra3/logs/sbatch_out/phd_project/processing/stack_three_make_smaller.out
+#SBATCH --error=/coc/flash7/nkra3/logs/sbatch_err/phd_project/processing/stack_three_make_smaller.err
+#SBATCH --partition=overcap
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=6
+#SBATCH --gpus-per-node="a40:1"
+#SBATCH --exclude="clippy"
+#SBATCH --exclude="chappie"
+#SBATCH --mem-per-gpu=80G
+
+export PYTHONUNBUFFERED=TRUE
+source ~/.bashrc
+source /nethome/nkra3/flash7/miniconda3/etc/profile.d/conda.sh
+conda deactivate
+conda activate robomimic-dev
+
+
+cd /nethome/nkra3/flash7/phd_project/robomimic-nadun/robomimic
+
+dataset=/nethome/nkra3/flash7/phd_project/robomimic-nadun/datasets/stack_three/stack_three_d0.hdf5
+out_fn=/nethome/nkra3/flash7/phd_project/robomimic-nadun/datasets/stack_three/stack_three_d0_500.hdf5
+
+srun -u python -u dev/dataset_processing/create_smaller_dataset.py --dataset=$dataset --out_fn=$out_fn
