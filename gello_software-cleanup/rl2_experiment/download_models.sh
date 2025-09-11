@@ -1,1 +1,0 @@
-rsync -ah -P nkra3@sky1.cc.gatech.edu:/coc/flash7/nkra3/Droid/robomimic-dev/bc_trained_models/kitchen_models /media/aloha/Data/robomimic-v2/bc_trained_models
