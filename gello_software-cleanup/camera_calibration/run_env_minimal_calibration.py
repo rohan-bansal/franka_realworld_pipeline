@@ -29,25 +29,12 @@ from gello.zmq_core.robot_node import ZMQClientRobot
 # from gello.cameras.realsense_camera import RealSenseCamera
 #TODO install pyzed and use it
 # import pyzed.sl as sl
-from termcolor import cprint
 
-class Rate:
-    def __init__(self, rate: float, name: str=None, log_warning=False):
-        self.last = time.perf_counter()
-        self.rate = rate
-        self.dt   = 1.0 / self.rate
-        self.name = name
-        self.log_warning = log_warning
+import cv2
+from dt_apriltags import Detector
+from scipy.spatial.transform import Rotation
 
-    def sleep(self) -> None:
-        update_rate = 1.0 / (time.perf_counter() - self.last)
-        # if self.name=="RL2 Robot Env":
-        #     print(f"update rate is: {update_rate}")
-        if update_rate < self.rate and self.log_warning:
-            cprint(f"Warning: {self.name} update rate is {update_rate}Hz, lower than {self.rate}Hz", "red")
-        while (self.last + 1.0 / self.rate) > time.perf_counter():
-            time.sleep(0.001)
-        self.last = time.perf_counter()
+
 
 def print_color(*args, color=None, attrs=(), **kwargs):
     import termcolor
@@ -70,7 +57,7 @@ class Args:
     shoulderview_left_sn: int = 20036094
     wrist_camera_sn: int = 18482824
     camera_type: str = "both" # can be 'Zed' or 'zmq' or 'RealSense' or 'both'
-    save_depth_obs: bool = True
+    save_depth_obs: bool = False
     hostname: str = "127.0.0.1"
     robot_type: str = None  # only needed for quest agent or spacemouse agent
     hz: int = 100
@@ -80,7 +67,8 @@ class Args:
     gello_port: Optional[str] = None
     save_pkl: bool = False # use_save_interface: bool = False
     save_hdf5: bool = True
-    data_dir: str = "/media/robot/Data_2/rohan/demo_collection/official/place_yellow_cup_top_right_drawer"  # provide save dir here
+    # data_dir: str = "/media/aloha/Data/robomimic-v2/Demos/Retriever"  # provide save dir here
+    data_dir: str = "/media/robot/Data_2/rohan/demo_collection/cup_drawer_8"  # provide save dir here
     task: str = None
     # Dont change below
     bimanual: bool = False
@@ -96,8 +84,6 @@ def main(args):
     data_save_dir = os.path.join(str(Path(args.data_dir).expanduser()), args.task)
     if args.save_hdf5:
         os.makedirs(data_save_dir, exist_ok=True)
-
-    rate = Rate(10.0, name="rollout_rate", log_warning=True)
 
 
     ### TODO Starting the Zed cameras
@@ -136,6 +122,82 @@ def main(args):
 
     robot_client = PandaRobot("OSC_POSE", gripper_type="robotiq")
     env = RobotEnv(robot_client, control_rate_hz=args.hz, camera_dict=cam_dict, save_depth_obs=args.save_depth_obs)
+
+        # ==== AprilTag detector + intrinsics (Kinect) ====
+    # Same intrinsics as in apriltag_pose.py
+    K = np.array([
+        [608.01702881,   0.0,        640.24462891],
+        [0.0,            607.79614258, 364.64956665],
+        [0.0,              0.0,        1.0],
+    ], dtype=np.float32)
+
+    fx = K[0, 0]
+    fy = K[1, 1]
+    cx = K[0, 2]
+    cy = K[1, 2]
+    cam_params = [fx, fy, cx, cy]
+
+    TAG_SIZE = 0.06 * 5.0 / 9.0   # same as your original RealSense/Kinect tag size
+
+    at_detector = Detector(
+        families='tagStandard41h12',
+        nthreads=1,
+        quad_decimate=1.0,
+        quad_sigma=0.0,
+        refine_edges=1,
+        decode_sharpening=0.25,
+        debug=0,
+    )
+
+    # log of {timestamp, tag_xyz, eef_xyz} for current episode
+    april_eef_pairs = []
+    episode_idx = 0
+
+    def get_tag_and_eef(obs):
+        """
+        Returns (tag_xyz, eef_xyz) or (None, None) if tag/eef not available.
+        tag_xyz: 3D translation of the first detected tag in camera frame.
+        eef_xyz: 3D end-effector position (whatever frame env uses).
+        """
+
+        # ---- EEF position from obs ----
+        # Adjust the key here based on your env observation dict.
+        # Common names: "ee_pos", "eef_pos", "eef_position", etc.
+        eef_xyz = (
+            obs.get("ee_pos", None)
+            if isinstance(obs, dict) else None
+        )
+        if eef_xyz is None and isinstance(obs, dict):
+            eef_xyz = obs.get("eef_pos", None)
+        if eef_xyz is not None:
+            eef_xyz = np.asarray(eef_xyz).reshape(3)
+
+        # ---- AprilTag pose from Kinect (agentview) ----
+        if "agentview" not in cam_dict:
+            return None, eef_xyz
+
+        data = cam_dict["agentview"].read()
+        if "rgb" not in data:
+            return None, eef_xyz
+
+        rgb_image = data["rgb"]  # KinectCamera.read() gives RGB
+        gray = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
+
+        tags = at_detector.detect(
+            gray,
+            estimate_tag_pose=True,
+            camera_params=cam_params,
+            tag_size=TAG_SIZE,
+        )
+
+        if len(tags) == 0:
+            return None, eef_xyz
+
+        tag = tags[0]
+        tag_t = tag.pose_t.reshape(3)  # xyz in camera frame
+
+        return tag_t, eef_xyz
+
 
     task_description = input("Enter description of the task: ")
 
@@ -263,6 +325,9 @@ def main(args):
                 # START RECORDING
                 elif state == "start":
 
+                    april_eef_pairs.clear()   # start fresh for this episode
+
+
                     obs = env.get_obs()
                     controller_state = agent.get_controller_state()
                     action = controller_state['target_pose'] + controller_state['gripper_act']
@@ -287,6 +352,13 @@ def main(args):
                     # print(act_abs)
                     data_collector.collect(data)
 
+                    tag_xyz, eef_xyz = get_tag_and_eef(obs)
+                    if (tag_xyz is not None) and (eef_xyz is not None):
+                        april_eef_pairs.append({
+                            "timestamp": float(time.time()),
+                            "tag_xyz": [float(x) for x in tag_xyz],
+                            "eef_xyz": [float(x) for x in eef_xyz],
+                        })
                 # STOP RECORDING
                 elif state == "stop":
 
@@ -295,6 +367,14 @@ def main(args):
                     env.robot().reset()
                     agent.reset_internal_state()
 
+                    # ---- Save AprilTag/EEF pairs for this episode ----
+                    json_name = f"april_eef_pairs_ep{episode_idx:03d}.json"
+                    json_path = os.path.join(data_save_dir, json_name)
+                    with open(json_path, "w") as f:
+                        json.dump(april_eef_pairs, f, indent=2)
+                    print(f"Saved {len(april_eef_pairs)} AprilTag/EEF pairs to {json_path}")
+                    episode_idx += 1
+                    april_eef_pairs.clear()
 
                     # save_path = None
                     # transition_count = 0  # start new demo
@@ -333,10 +413,8 @@ def main(args):
                 # Just step action without saving
                 obs = env.step(action)
             if state != "idle":
-                rate.sleep()
                 freq = 1 / (time.time() - curr_time)
                 print(freq)
-
                 freqs.append(freq)
                 curr_time = time.time()
 

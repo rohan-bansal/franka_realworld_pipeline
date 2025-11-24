@@ -7,7 +7,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # input parameters
 parser = argparse.ArgumentParser()
-parser.add_argument("--exp-dir", required=False, default="/media/robot/Data_2/rohan/mfm/workspace/gello_software-cleanup/checkpoints/policy/0907_atm-policy_pickplace_demo_40_1954_seed1")
+parser.add_argument("--exp-dir", required=False, default="/media/robot/Data_2/rohan/mfm/workspace/gello_software-cleanup/checkpoints/policy/1030_atm_dp_cotracker_abs_50_demos_0908_seed1")
 args = parser.parse_args()
 
 # evaluation configs
@@ -16,7 +16,7 @@ env_gpu_ids = [0]
 
 
 exp_dir = args.exp_dir
-command = (f'python experiments/run_trained_policy_atm.py --config-dir={exp_dir} --config-name=config hydra.run.dir=/tmp '
+command = (f'python experiments/run_trained_policy_atm_absolute_3.py --config-dir={exp_dir} --config-name=config hydra.run.dir=/tmp '
             f'+save_path={exp_dir} '
             f'train_gpus="{train_gpu_ids}" '
             f'env_cfg.env_name="realworld" env_cfg.task_name="realworld" '

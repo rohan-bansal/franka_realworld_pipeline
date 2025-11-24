@@ -96,6 +96,40 @@ class PandaRobot(Robot):
             0.04139311
         ]
 
+        # old cup drawer
+        self.reset_joint_positions = [
+            -0.12642737816500993, 
+            0.01670521373926294, 
+            -0.048160843477071384, 
+            -2.1625353572147596, 
+            -0.02861731668152335, 
+            2.2113044130348274, 
+            -0.27871756817522647
+        ]
+
+        # new cup drawer
+        self.reset_joint_positions = [
+            -0.10487002, 
+            -0.22060574, 
+            -0.07811996, 
+            -2.64340442, 
+            -0.02563163,
+            2.43613093, 
+            -0.10561634
+        ]
+
+        self.reset_joint_positions = [9.84182056e-04, -4.70252872e-01,  9.73175456e-02, -2.68219135e+00,
+        1.36150909e-02,  2.21425493e+00,  6.28681356e-02]
+
+
+        print(self.get_joint_state())
+
+        current_pose = self.robot_interface.last_eef_pose
+        current_pos = current_pose[:3, 3]
+        current_rot = current_pose[:3, :3]
+        current_quat = transform_utils.mat2quat(current_rot)
+
+        print(current_pos, current_quat)
 
         self.reset() # self.robot.go_home()
 
@@ -106,6 +140,8 @@ class PandaRobot(Robot):
 
     
     def reset(self):
+
+        # print(self.get_joint_state()["joint_positions"])
 
         #TODO move this down below later
 
@@ -130,7 +166,7 @@ class PandaRobot(Robot):
                             - np.array(self.reset_joint_positions)
                         )
                     )
-                    < 5e-3
+                    < 1e-3
                 ):
                     break
             self.robot_interface.control(
@@ -170,6 +206,8 @@ class PandaRobot(Robot):
         #     gripper_width = self.gripper_interface.get_gripper_act()
 
         # jointpos = np.append(robot_joints, gripper_width)
+
+        # print(joint_positions)
 
         joint_state = {
             "joint_positions": np.array(joint_positions),
@@ -310,6 +348,7 @@ class PandaRobot(Robot):
 
         eef_angle = transform_utils.quat2axisangle(np.copy(eef_quat))
         gripper_pos = self.get_gripper_state()
+        gripper_pos = 0
         return {
             "joint_positions": joint_state["joint_positions"],
             "joint_velocities": joint_state["joint_velocities"], # unused?
@@ -329,7 +368,18 @@ def main():
         # robot.gripper_interface.grasp(1)
         # print(f"Current joints are : {current_joints}")
         obs = robot.get_observations()
-        print(obs)
+        # print(obs["eef_pos"], obs["eef_axis_angle"], [obs["gripper_position"]])
+
+        eef_pos = np.array(obs["eef_pos"])
+        eef_axis_angle = np.array(obs["eef_quat"])
+        gripper_position = np.array([obs["gripper_position"]])
+
+        action = np.concatenate([eef_pos, eef_axis_angle, gripper_position])
+
+        action[2] -= 0.01
+        # print(action)
+        input(f"{action}")
+        robot.step(action)
         # time.sleep(3)
         # robot.gripper_interface.grasp(-1)
         #

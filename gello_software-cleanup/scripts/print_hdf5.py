@@ -9,9 +9,9 @@ def print_hdf5_tree(name, obj, indent=0):
     prefix = "│   " * indent + "├── "
     if isinstance(obj, h5py.Dataset):
         print(f"{prefix}{name.split('/')[-1]}: {obj.shape} [{obj.dtype}]")
-        if "actions" in name:
-            vals = obj[:]
-            print(vals)
+        # if "actions" in name:
+        #     vals = obj[:]
+        #     print(vals)
     elif isinstance(obj, h5py.Group):
         print(f"{prefix}{name.split('/')[-1]}/")
 

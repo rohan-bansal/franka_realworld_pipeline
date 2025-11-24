@@ -506,7 +506,7 @@ class BCViLTPolicy(nn.Module):
 
         action = action.reshape(-1, *self.act_shape)
         action = torch.clamp(action, -1, 1)
-        return action.float().cpu().numpy(), (None, rec_tracks[:, :, -1, :, :, :])  # (b, *act_shape)
+        return [action.float().cpu().numpy()], (None, rec_tracks[:, :, -1, :, :, :])  # (b, *act_shape)
 
     def reset(self):
         self.latent_queue.clear()

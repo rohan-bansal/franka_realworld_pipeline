@@ -214,7 +214,7 @@ class ZedCamera(CameraDriver):
         self.serial_number = str(camera_properties.serial_number)
         self.resize = config.get('resize', True)
         if self.resize:
-            self.resize_resolution = config.get('resize_resolution', (640, 480))
+            self.resize_resolution = config.get('resize_resolution', (640, 576))
 
         # self.resolution = config.get('zed_resolution', sl.RESOLUTION.VGA)
         self.resolution = config.get('zed_resolution', sl.RESOLUTION.HD720)

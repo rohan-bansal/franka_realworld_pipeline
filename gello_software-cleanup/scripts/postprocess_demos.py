@@ -14,7 +14,7 @@ from collections import defaultdict
 from PIL import Image
 
 # TODO: maybe RESIZE_SHAPE should be set elsewhere
-RESIZE_SHAPE = (640, 480)
+RESIZE_SHAPE = (640, 576)
 #RESIZE_SHAPE = (672, 376)
 
 

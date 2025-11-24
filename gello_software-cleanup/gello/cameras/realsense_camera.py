@@ -116,7 +116,8 @@ def _debug_read(camera, save_datastream=False):
         res = camera.read()
         rgb = res["rgb"]
         depth = res["depth"]
-        depth_normalized = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX)
+        # depth_normalized = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX)
+        depth_normalized = depth * 255.0
         depth_display = np.uint8(depth_normalized)
 
         # Optional: apply a color map

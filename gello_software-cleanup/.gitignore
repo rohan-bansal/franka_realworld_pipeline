@@ -34,3 +34,6 @@ pat
 ./rl2_experiment
 
 /cameras/calibration/configs
+checkpoints/
+demos_for_testing/
+recorded_data/

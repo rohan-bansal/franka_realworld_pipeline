@@ -27,7 +27,7 @@ FORCE_INDEX = 12
 
 
 class Robotiq2FingerGripper:
-    def __init__(self, device_id=0, stroke=0.085, comport="/dev/ttyUSB0", baud=115200):
+    def __init__(self, device_id=0, stroke=0.085, comport="/dev/ttyUSB1", baud=115200):
 
         self.client = comModBusRtu.communication()
 

@@ -28,11 +28,13 @@ class RobotEnv:
         save_depth_obs = False
     ) -> None:
         self._robot = robot
+        print("ctrl rate hz initialited to: ", control_rate_hz)
         self._rate = Rate(control_rate_hz)
         self._camera_dict = {} if camera_dict is None else camera_dict
         self._save_depth_obs = save_depth_obs
 
-        self.task_emb = np.load("/media/robot/Data_2/rohan/mfm/workspace/gello_software-cleanup/libero/task_embedding_caches/task_emb_bert_pickup_block.npy", allow_pickle=True).item()["pick up the block and put it down"]
+        self.task_emb = np.load("/media/robot/Data_2/rohan/mfm/workspace/gello_software-cleanup/libero/task_embedding_caches/task_emb_bert_cup_drawer.npy", allow_pickle=True).item()["open the top drawer and place the cup inside and close the drawer"]
+
 
     def robot(self) -> Robot:
         """Get the robot object.
@@ -92,23 +94,27 @@ class RobotEnv:
                 observations[f"{name}_image"] = data['rgb']
                 if self._save_depth_obs:
                     observations[f"{name}_depth"] = data["depth"]
+                    observations[f"{name}_color_in_depth_frame"] = data["transformed_color"]
+                    # observations[f"{name}_depth_in_color_frame"] = data["transformed_depth"]
             else:
                 raise Exception("Incorrect camera type set. Check camera!")
 
         robot_obs = self._robot.get_observations()
+        # print(robot_obs.keys())
         assert "joint_positions" in robot_obs
         # assert "joint_velocities" in robot_obs
         # assert "ee_pos_quat" in robot_obs
         observations["joint_positions"] = robot_obs["joint_positions"]
-        # observations["eef_pos"] = robot_obs["eef_pos"]
-        # observations["eef_quat"] = robot_obs["eef_quat"]
-        # observations["eef_axis_angle"] = robot_obs["eef_axis_angle"]
-        # observations["eef_pose"] = robot_obs["eef_pose"]
+        observations["eef_pos"] = robot_obs["eef_pos"]
+        observations["eef_quat"] = robot_obs["eef_quat"]
+        observations["eef_axis_angle"] = robot_obs["eef_axis_angle"]
+        observations["eef_pose"] = robot_obs["eef_pose"]
         # observations["joint_velocities"] = robot_obs["joint_velocities"]
         # observations["ee_pos_quat"] = robot_obs["ee_pos_quat"]
         gripper = np.array([robot_obs["gripper_position"], -robot_obs["gripper_position"]])
         observations["gripper_position"] = gripper
         observations["task_emb"] = self.task_emb
+        # observations["current_action"] = robot_obs["current_action"]
 
         # TODO Hardcoded asserts, change to based on camera dict
         # assert "shoulderview_left_image" in observations, "LEFT ZED CAMERA NOT STREAMING, RECONNECT!"
