@@ -7,7 +7,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # input parameters
 parser = argparse.ArgumentParser()
-parser.add_argument("--exp-dir", required=False, default="/media/robot/Data_2/rohan/mfm/workspace/gello_software-cleanup/checkpoints/policy/1030_atm_dp_cotracker_abs_50_demos_0908_seed1")
+parser.add_argument("--exp-dir", required=False, default="/media/robot/Data_2/rohan/mfm/workspace/gello_software-cleanup/checkpoints/policy_new/1208_atm_dp_spatracker_mfm_baseline_abs_20_demos_1455_seed1")
 args = parser.parse_args()
 
 # evaluation configs

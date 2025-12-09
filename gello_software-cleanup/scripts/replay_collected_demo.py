@@ -5,6 +5,32 @@ import argparse
 from gello.rl2_env import RobotEnv
 from gello.robots.panda_deoxys_simple import PandaRobot
 from deoxys.utils import transform_utils
+from termcolor import cprint
+
+class Rate:
+    def __init__(self, rate: float, name: str=None, log_warning=False):
+        self.last = time.perf_counter()
+        self.rate = rate
+        self.dt   = 1.0 / self.rate
+        self.name = name
+        self.log_warning = log_warning
+
+    def sleep(self) -> None:
+        update_rate = 1.0 / (time.perf_counter() - self.last)
+        # if self.name=="RL2 Robot Env":
+        #     print(f"update rate is: {update_rate}")
+        if update_rate < self.rate and self.log_warning:
+            cprint(f"Warning: {self.name} update rate is {update_rate}Hz, lower than {self.rate}Hz", "red")
+        while (self.last + 1.0 / self.rate) > time.perf_counter():
+            time.sleep(0.001)
+        self.last = time.perf_counter()
+
+def print_color(*args, color=None, attrs=(), **kwargs):
+    import termcolor
+
+    if len(args) > 0:
+        args = tuple(termcolor.colored(arg, color=color, attrs=attrs) for arg in args)
+    print(*args, **kwargs)
 
 
 def load_action_sequence(hdf5_path):
@@ -29,7 +55,8 @@ def load_action_sequence(hdf5_path):
 def main(hdf5_path, delay=0.05, go_home=True):
     # Load actions from file
     actions = load_action_sequence(hdf5_path)
-    
+    rate = Rate(10.0, name="rollout_rate", log_warning=True)
+
     cam_dict = {}
     cam_config_dict = {"agentview": {"sn" : "001039114912", "type": "Kinect", 'resize': True, 'resize_resolution': (640, 480)},
 # cam_config_dict = {"agentview": {"sn" : "241222076871", "type": "RealSense"},
@@ -74,6 +101,7 @@ def main(hdf5_path, delay=0.05, go_home=True):
         # print(action)
         obs, _ = env.step(action)
         # time.sleep(delay)
+        rate.sleep()
 
     print("Done!")
 

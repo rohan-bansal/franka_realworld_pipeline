@@ -34,9 +34,6 @@ from gello.rl2_env import RobotEnv
 
 from atm.policy import *
 from atm.utils.train_utils import setup_optimizer
-# from atm.utils.process_utils import eef_target_pose2action, action2eef_target_pose, controller, pose2mat
-# from robosuite.utils.transform_utils import mat2quat
-# from scipy.spatial.transform import Rotation as R
 from termcolor import cprint
 
 from collections import defaultdict
@@ -64,8 +61,6 @@ class Rate:
 
     def sleep(self) -> None:
         update_rate = 1.0 / (time.perf_counter() - self.last)
-        # if self.name=="RL2 Robot Env":
-        #     print(f"update rate is: {update_rate}")
         if update_rate < self.rate and self.log_warning:
             cprint(f"Warning: {self.name} update rate is {update_rate}Hz, lower than {self.rate}Hz", "red")
         while (self.last + 1.0 / self.rate) > time.perf_counter():
@@ -128,46 +123,17 @@ def rollout(env, policy, horizon=None, action_norms=None):
 
     rate = Rate(10.0, name="rollout_rate", log_warning=True)
 
-    # --- ADDED: Flag to track if first frame is saved ---
-    first_frame_saved = False
+    prev_gripper = 0
 
     try:
         while not done and (horizon is None or step_i < horizon):
 
-            # Save initial pose before policy runs
-            initial_ee_pos = obs["eef_pos"]
-            initial_ee_ori = obs["eef_quat"]
-            color_in_depth_frame = obs["agentview_color_in_depth_frame"]
-
-            # output_image_path = "/media/robot/Data_2/rohan/mfm/workspace/gello_software-cleanup/experiments/debug_policy_input_2.png"
-            
             agentview_image_cropped = obs_preprocess(obs["agentview_image"])
             wrist_image_cropped = obs_preprocess(obs["wrist_image"])
 
             agentview_rgb = cv2.resize(agentview_image_cropped, (128,128), interpolation=cv2.INTER_LINEAR)
             wrist_rgb = cv2.resize(wrist_image_cropped, (128, 128), interpolation=cv2.INTER_LINEAR)
             
-            # --- ADDED START: Save First Frame ---
-            '''
-            if not first_frame_saved:
-                try:
-                    # Using a different name to avoid overwriting your other script's output
-                    save_path = "/media/robot/Data_2/rohan/mfm/workspace/gello_software-cleanup/experiments/first_frame_visualization_real_obs.png"
-                    
-                    # Convert from RGB (from env) to BGR (for cv2)
-                    agent_img_bgr = cv2.cvtColor(agentview_rgb, cv2.COLOR_RGB2BGR)
-                    wrist_img_bgr = cv2.cvtColor(wrist_rgb, cv2.COLOR_RGB2BGR)
-                    
-                    # Stack horizontally (agent | wrist)
-                    combined_frame = np.hstack((agent_img_bgr, wrist_img_bgr))
-                    
-                    cv2.imwrite(save_path, combined_frame)
-                    print(f"Saved first frame (real obs) visualization to {save_path}")
-                    first_frame_saved = True # Set flag so we don't save again
-                except Exception as e:
-                    cprint(f"Warning: Failed to save first frame. Error: {e}", "red")
-            # --- ADDED END: Save First Frame ---
-            '''
             views = np.stack([agentview_rgb, wrist_rgb], axis=0) # v,h,w,c
             rgb = np.expand_dims(views, axis=0) # b,v,h,w,c
             task_emb = obs.get("task_emb", None)[np.newaxis, ...]
@@ -178,9 +144,6 @@ def rollout(env, policy, horizon=None, action_norms=None):
 
             # Get new actions if queue is empty
             if len(action_queue) == 0:
-
-                combined_frame = np.hstack((agentview_rgb, wrist_rgb))
-                cv2.imwrite(output_image_path, views)
                 
                 actions, _tracks = policy.act(rgb, task_emb, extra_states)
                 action_queue = list(actions)
@@ -209,6 +172,12 @@ def rollout(env, policy, horizon=None, action_norms=None):
 
             # Execute and save resulting pose
             obs, act = env.step(abs_action.tolist())
+            # print(act)
+
+            # if prev_gripper > 0.5 and abs_action[-1] < 0.5:
+            #     exit()
+
+            # prev_gripper = abs_action[-1]
                 # actual_pose = pose2mat(obs["eef_pos"], obs["eef_quat"])
                 # actual_poses.append(actual_pose)
                 
@@ -330,11 +299,9 @@ def main(cfg: DictConfig):
 
     fabric = Fabric(accelerator="cuda", devices=list(cfg.train_gpus), strategy="ddp")
     fabric.launch()
-
-    # Add target chaining flag to config if not present
     
     results = evaluate(fabric, cfg, 
-                      checkpoint="/media/robot/Data_2/rohan/mfm/workspace/gello_software-cleanup/checkpoints/policy_new/1106_atm_dp_cotracker_abs_20_demos_2111_seed1/model_2625.ckpt")
+                      checkpoint="/media/robot/Data_2/rohan/mfm/workspace/gello_software-cleanup/checkpoints/policy_new/1208_atm_dp_spatracker_mfm_baseline_abs_20_demos_1455_seed1/model_2000.ckpt")
     fabric.barrier()
 
 

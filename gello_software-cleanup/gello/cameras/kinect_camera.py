@@ -80,7 +80,7 @@ class KinectCamera(CameraDriver):
 
         self._camera.exposure_mode_auto = False
         self._camera.whitebalance_mode_auto = False
-        self._camera.exposure = 9000
+        self._camera.exposure = 8000 # 9000
         self._camera.whitebalance = 4510
 
     def read(
