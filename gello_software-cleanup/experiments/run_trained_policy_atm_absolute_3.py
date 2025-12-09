@@ -222,8 +222,10 @@ def rollout(env, policy, horizon=None, action_norms=None):
 
 
 
-def evaluate(fabric, cfg, checkpoint):
-    cfg.model_cfg.load_path = checkpoint
+def evaluate(fabric, cfg):
+    # Load model checkpoint path from Hydra config (provided by the caller script)
+    checkpoint_path = cfg.checkpoint_path
+    cfg.model_cfg.load_path = checkpoint_path
     model_cls = eval(cfg.model_name)
     model = model_cls(**cfg.model_cfg)
 
@@ -239,7 +241,8 @@ def evaluate(fabric, cfg, checkpoint):
 
     all_results = []
 
-    action_norms = pickle.load(open("/media/robot/Data_2/rohan/mfm/workspace/gello_software-cleanup/checkpoints/action_norms/action_normalization_stats_full.pkl", "rb"))["actions"]
+    action_norms_path = cfg.action_norms_path
+    action_norms = pickle.load(open(action_norms_path, "rb"))["actions"]
     
     print("creating real world environment")
 
@@ -300,8 +303,7 @@ def main(cfg: DictConfig):
     fabric = Fabric(accelerator="cuda", devices=list(cfg.train_gpus), strategy="ddp")
     fabric.launch()
     
-    results = evaluate(fabric, cfg, 
-                      checkpoint="/media/robot/Data_2/rohan/mfm/workspace/gello_software-cleanup/checkpoints/policy_new/1208_atm_dp_spatracker_mfm_baseline_abs_20_demos_1455_seed1/model_2000.ckpt")
+    results = evaluate(fabric, cfg)
     fabric.barrier()
 
 
