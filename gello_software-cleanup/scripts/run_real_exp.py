@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     "--policy-dir",
     required=False,
-    default="/media/robot/Data_2/rohan/mfm/workspace/gello_software-cleanup/checkpoints/policy_new/1208_atm_dp_spatracker_mfm_baseline_abs_20_demos_1455_seed1",
+    default="/media/robot/Data_2/rohan/mfm/workspace/gello_software-cleanup/checkpoints/policy_official/1230_atm_dp_16_tasks_20_demos_1648_seed1",
 )
 parser.add_argument(
     "--policy-checkpoint",
@@ -20,12 +20,12 @@ parser.add_argument(
 parser.add_argument(
     "--track-policy-dir",
     required=False,
-    default="/media/robot/Data_2/rohan/mfm/workspace/gello_software-cleanup/checkpoints/track_transformer/1208_realworld_track_transformer_mfm_spatrack_place_orange_cup_top_of_drawer_ep2501_0441"
+    default="/media/robot/Data_2/rohan/mfm/workspace/gello_software-cleanup/checkpoints/track_transformer_official/1230_realworld_track_transformer_mfm_16_realworld_tasks_ep3001_0258"
 )
 parser.add_argument(
     "--action-norms-path",
     required=False,
-    default="/media/robot/Data_2/rohan/mfm/workspace/gello_software-cleanup/checkpoints/action_norms/action_normalization_stats_full.pkl",
+    default="/media/robot/Data_2/rohan/mfm/workspace/gello_software-cleanup/checkpoints/policy_official/action_norm/action_normalization_stats_full.pkl",
 )
 args = parser.parse_args()
 
@@ -37,7 +37,7 @@ env_gpu_ids = [0]
 exp_dir = args.policy_dir
 checkpoint_path = os.path.join(exp_dir, args.policy_checkpoint)
 command = (
-    f'python experiments/run_trained_policy_atm_absolute.py '
+    f'python experiments/run_trained_policy_atm_absolute_lang.py '
     f'--config-dir={exp_dir} --config-name=config hydra.run.dir=/tmp '
     f'+save_path={exp_dir} '
     f'+checkpoint_path={checkpoint_path} '

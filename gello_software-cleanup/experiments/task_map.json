@@ -1,0 +1,18 @@
+{
+  "hang_pink_cup_mug_tree_demo": "pick up the pink cup and hang the pink cup on the mug tree",
+  "hang_red_cup_mug_tree_demo": "pick up the red cup and hang the red cup on the mug tree",
+  "place_blue_bowl_left_drawer_demo": "open the left drawer, pick up the blue bowl, and place the blue bowl inside the left drawer",
+  "place_blue_bowl_right_top_drawer_demo": "open the top right drawer, pick up the blue bowl, and place the blue bowl inside the top right drawer",
+  "place_blue_bowl_top_of_drawer_demo": "pick up the blue bowl and place the blue bowl on top of the drawer",
+  "place_blue_cup_left_drawer_demo": "open the left drawer, pick up the blue cup, and place the blue cup inside the left drawer",
+  "place_blue_cup_right_top_drawer_demo": "open the top right drawer, pick up the blue cup, and place the blue cup inside the top right drawer",
+  "place_blue_cup_top_of_drawer_demo": "pick up the blue cup and place the blue cup on top of the drawer",
+  "place_orange_cup_left_drawer_demo": "open the left drawer, pick up the orange cup, and place the orange cup inside the left drawer",
+  "place_orange_cup_top_of_drawer_demo": "pick up the orange cup and place the orange cup on top of the drawer",
+  "place_orange_cup_top_right_drawer_demo": "open the top right drawer, pick up the orange cup, and place the orange cup inside the top right drawer",
+  "place_pink_cup_left_drawer_demo": "open the left drawer, pick up the pink cup, and place the pink cup inside the left drawer",
+  "place_pink_cup_top_of_drawer_demo": "pick up the pink cup and place the pink cup on top of the drawer",
+  "place_red_cup_left_drawer_demo": "open the left drawer, pick up the red cup, and place the red cup inside the left drawer",
+  "place_red_cup_top_of_drawer_demo": "pick up the red cup and place the red cup on top of the drawer",
+  "place_spam_top_of_drawer_demo": "pick up the spam and place the spam on top of the drawer"
+}
