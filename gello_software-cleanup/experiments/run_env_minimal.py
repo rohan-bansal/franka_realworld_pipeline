@@ -80,7 +80,7 @@ class Args:
     gello_port: Optional[str] = None
     save_pkl: bool = False # use_save_interface: bool = False
     save_hdf5: bool = True
-    data_dir: str = "/media/robot/Data_2/rohan/demo_collection/official/fixed_lighting/place_blue_bowl_top_of_drawer"  # provide save dir here
+    data_dir: str = "/media/robot/Data_2/rohan/demo_collection/official/fixed_lighting/place_the_blue_bowl_in_the_right_top_drawer"  # provide save dir here
     task: str = None
     # Dont change below
     bimanual: bool = False

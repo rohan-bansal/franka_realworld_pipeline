@@ -60,11 +60,13 @@ def main():
         for e in reset_joint_positions
     ]
     action = reset_joint_positions + [-1.0]
-
+    
+# pyzmq 25.1.2 libzmq 4.3.4
     while True:
         if len(robot_interface._state_buffer) > 0:
-            logger.info(f"Current Robot joint: {np.round(robot_interface.last_q, 3)}")
-            logger.info(f"Desired Robot joint: {np.round(robot_interface.last_q_d, 3)}")
+            # logger.info(f"Current Robot joint: {np.round(robot_interface.last_q, 3)}")
+            # logger.info(f"Desired Robot joint: {np.round(robot_interface.last_q_d, 3)}")
+            print(robot_interface.get_state())
 
             if (
                 np.max(
